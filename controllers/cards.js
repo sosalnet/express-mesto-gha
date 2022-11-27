@@ -34,7 +34,7 @@ module.exports.deleteCardById = (req, res) => {
         res.send({ data: card });
       } else {
         res
-          .status(constants.HTTP_STATUS_INTERNAL_NOT_FOUND)
+          .status(constants.HTTP_STATUS_NOT_FOUND)
           .send({ message: 'Карточка не обнаруженa' });
       }
     })
@@ -63,7 +63,7 @@ module.exports.likeCard = (req, res) => {
         res.send({ data: card });
       } else {
         res
-          .status(constants.HTTP_STATUS_INTERNAL_NOT_FOUND)
+          .status(constants.HTTP_STATUS_NOT_FOUND)
           .send({ message: 'Карточка не обнаруженa' });
       }
     })
@@ -92,7 +92,7 @@ module.exports.dislikeCard = (req, res) => {
         res.send({ data: card });
       } else {
         res
-          .status(constants.HTTP_STATUS_INTERNAL_NOT_FOUND)
+          .status(constants.HTTP_STATUS_NOT_FOUND)
           .send({ message: 'Карточка не обнаруженa' });
       }
     })
