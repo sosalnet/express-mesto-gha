@@ -1,6 +1,7 @@
 const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
+const { constants } = require('http2');
 
 const { PORT = 3000 } = process.env;
 
@@ -21,6 +22,10 @@ app.use((req, res, next) => {
 app.use('/users', require('./routes/users'));
 
 app.use('/cards', require('./routes/cards'));
+
+app.use('*', (req, res) => res
+  .status(constants.HTTP_STATUS_NOT_FOUND)
+  .send({ message: 'Страница не найдена' }));
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
