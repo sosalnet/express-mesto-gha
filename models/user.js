@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-
-const emailRegex = /^\w+@\w+/i;
+const emailRegex = require('../utils/utils');
+const urlRegex = require('../utils/utils');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    validate: {
+      validator: (link) => urlRegex.test(link),
+      message: () => 'Введите корректный url',
+    },
   },
   email: {
     type: String,
@@ -26,7 +30,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     validate: {
       validator: (email) => emailRegex.test(email),
-      message: () => 'Введите сущесестующиц email в формате ivan@ivanov.ru',
+      message: () => 'Введите корректный email',
     },
   },
   password: {
@@ -36,6 +40,7 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+// eslint-disable-next-line func-names
 userSchema.statics.findUserByCredentials = function (email, password) {
   return this.findOne({ email }).select('+password')
     .then((info) => {

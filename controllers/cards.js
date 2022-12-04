@@ -1,57 +1,52 @@
-const { constants } = require('http2');
+const ServerError = require('../errors/ServerError');
+const BadRequestError = require('../errors/BadRequestError');
+const NotFoundError = require('../errors/NotFoundError');
 const Card = require('../models/card');
+const ForbiddenError = require('../errors/ForbiddenError');
 
-module.exports.getCards = (req, res) => {
+module.exports.getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch(() => res
-      .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка прочтения карточки' }));
+    .catch((err) => next(err));
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const owner = req.user._id;
   const { name, link } = req.body;
   Card.create({ name, link, owner })
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Переданы неверные данные' });
+        next(new BadRequestError('Переданы неверные данные'));
+      } else if (err.name === 'CastError') {
+        next(new BadRequestError('Переданы неверный id'));
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Ошибка создания карточки' });
+        next(new ServerError(err.message));
       }
     });
 };
 
-module.exports.deleteCardById = (req, res) => {
+module.exports.deleteCardById = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (card) {
         res.send({ data: card });
+      } else if (req.user._id !== card.owner.toString()) {
+        throw new ForbiddenError('Нет прав к данному действию');
       } else {
-        res
-          .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Карточка не обнаруженa' });
+        throw new NotFoundError('Карточка не обнаружена');
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Переданы неверные данные' });
+        next(new BadRequestError('Ошибка удаления карточки'));
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Ошибка поиска карточки' });
+        next(err);
       }
     });
 };
 
-module.exports.likeCard = (req, res) => {
+module.exports.likeCard = (req, res, next) => {
   const userId = req.user._id;
   Card.findByIdAndUpdate(
     req.params.cardId,
@@ -62,25 +57,21 @@ module.exports.likeCard = (req, res) => {
       if (card) {
         res.send({ data: card });
       } else {
-        res
-          .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Карточка не обнаруженa' });
+        throw new NotFoundError('Карточка не обнаружена');
       }
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Переданы неверные данные' });
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы неверные данные'));
+      } else if (err.name === 'CastError') {
+        next(new BadRequestError('Переданы неверный id'));
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Ошибка постановки лайка' });
+        next(err);
       }
     });
 };
 
-module.exports.dislikeCard = (req, res) => {
+module.exports.dislikeCard = (req, res, next) => {
   const userId = req.user._id;
   Card.findByIdAndUpdate(
     req.params.cardId,
@@ -91,20 +82,16 @@ module.exports.dislikeCard = (req, res) => {
       if (card) {
         res.send({ data: card });
       } else {
-        res
-          .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Карточка не обнаруженa' });
+        throw new NotFoundError('Карточка не обнаружена');
       }
     })
     .catch((err) => {
-      if (err.name === 'CastError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Переданы неверные данные' });
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы неверные данные'));
+      } else if (err.name === 'CastError') {
+        next(new BadRequestError('Переданы неверный id'));
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Ошибка убирания лайка' });
+        next(err);
       }
     });
 };

@@ -1,9 +1,13 @@
-const { constants } = require('http2');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const ServerError = require('../errors/ServerError');
+const BadRequestError = require('../errors/BadRequestError');
+const NotFoundError = require('../errors/NotFoundError');
+const ConflictError = require('../errors/ConflictError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   return User.findUserByCredentials(email, password)
     .then((user) => {
@@ -14,42 +18,36 @@ module.exports.login = (req, res) => {
       );
       res.send({ token });
     })
-    .catch((err) => console.log(err));
+    .catch(() => {
+      next(new UnauthorizedError('Неверные почта или пароль'));
+    });
 };
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res
-      .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-      .send({ message: 'Ошибка прочтения пользователя' }));
+    .catch((err) => next(err));
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (user) {
         res.send({ data: user });
       } else {
-        res
-          .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Пользователь не обнаружен' });
+        throw new NotFoundError('Пользователь не обнаружен');
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Переданы неверные данные' });
+        next('Переданы неверные данные');
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Ошибка поиска пользователя' });
+        next(err);
       }
     });
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     name,
     about,
@@ -65,21 +63,23 @@ module.exports.createUser = (req, res) => {
       email,
       password: hash,
     }))
-    .then((user) => res.send({ data: user }))
+    .then((document) => {
+      const user = document.toObject();
+      delete user.password;
+      res.send({ data: user });
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Переданы неверные данные' });
+        next(new BadRequestError('Переданы неверные данные'));
+      } else if (err.code === 11000) {
+        next(new ConflictError('Пользователь с такой почтой уже существует'));
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Ошибка создания пользователя' });
+        next(new ServerError(err.message));
       }
     });
 };
 
-module.exports.updateUser = (req, res) => {
+module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
   const userId = req.user._id;
   User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
@@ -87,25 +87,21 @@ module.exports.updateUser = (req, res) => {
       if (user) {
         res.send({ data: user });
       } else {
-        res
-          .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Пользователь не обнаружен' });
+        throw new NotFoundError('Пользователь не обнаружен');
       }
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Переданы неверные данные' });
+        next(new BadRequestError('Переданы неверные данные'));
+      } else if (err.name === 'CastError') {
+        next(new BadRequestError('Переданы неверный id'));
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Ошибка обновления пользователя' });
+        next(new ServerError(err.message));
       }
     });
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   const userId = req.user._id;
   User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
@@ -113,20 +109,16 @@ module.exports.updateAvatar = (req, res) => {
       if (user) {
         res.send({ data: user });
       } else {
-        res
-          .status(constants.HTTP_STATUS_NOT_FOUND)
-          .send({ message: 'Пользователь не обнаружен' });
+        throw new NotFoundError('Пользователь не обнаружен');
       }
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res
-          .status(constants.HTTP_STATUS_BAD_REQUEST)
-          .send({ message: 'Переданы неверные данные' });
+        next(new BadRequestError('Переданы неверные данные'));
+      } else if (err.name === 'CastError') {
+        next(new BadRequestError('Переданы неверный id'));
       } else {
-        res
-          .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-          .send({ message: 'Ошибка обновления аватара' });
+        next(new ServerError(err.message));
       }
     });
 };
