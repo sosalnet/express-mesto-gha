@@ -2,7 +2,7 @@ const { Joi, celebrate } = require('celebrate');
 const { urlRegex } = require('../utils/utils');
 
 module.exports.celebrateCreateCard = celebrate({
-  body: Joi.object.keys({
+  body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     link: Joi.string().regex(urlRegex),
   }),

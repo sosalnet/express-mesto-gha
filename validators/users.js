@@ -2,7 +2,7 @@ const { Joi, celebrate } = require('celebrate');
 const { urlRegex } = require('../utils/utils');
 
 module.exports.celebrateCreateUser = celebrate({
-  body: Joi.object.keys({
+  body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
     avatar: Joi.string().regex(urlRegex),
@@ -12,20 +12,20 @@ module.exports.celebrateCreateUser = celebrate({
 });
 
 module.exports.celebrateLoginUser = celebrate({
-  body: Joi.object.keys({
+  body: Joi.object().keys({
     email: Joi.string().email().required(),
     password: Joi.string().min(8).required(),
   }),
 });
 
 module.exports.celebrateEditAvatar = celebrate({
-  body: Joi.object.keys({
+  body: Joi.object().keys({
     avatar: Joi.string().regex(urlRegex),
   }),
 });
 
 module.exports.celebrateEditUser = celebrate({
-  body: Joi.object.keys({
+  body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
   }),
