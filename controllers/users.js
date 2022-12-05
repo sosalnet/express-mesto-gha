@@ -5,7 +5,6 @@ const ServerError = require('../errors/ServerError');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
 const ConflictError = require('../errors/ConflictError');
-const UnauthorizedError = require('../errors/UnauthorizedError');
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
@@ -122,12 +121,12 @@ module.exports.updateUser = (req, res, next) => {
 module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   const userId = req.user._id;
-  User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(userId, { avatar }, { new: true })
     .then((user) => {
       if (user) {
         res.send({ data: user });
       } else {
-        throw new NotFoundError('Пользователь не обнаружен');
+        next(new NotFoundError('Аватар не обнаружен'));
       }
     })
     .catch((err) => {
