@@ -5,7 +5,7 @@ module.exports.celebrateCreateUser = celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().regex(urlRegex),
+    avatar: Joi.string().regex(urlRegex).uri({ scheme: ['http', 'https'] }),
     email: Joi.string().email().required(),
     password: Joi.string().min(8).required(),
   }),
@@ -14,13 +14,13 @@ module.exports.celebrateCreateUser = celebrate({
 module.exports.celebrateLoginUser = celebrate({
   body: Joi.object().keys({
     email: Joi.string().email().required(),
-    password: Joi.string().min(8).required(),
+    password: Joi.string().required(),
   }),
 });
 
 module.exports.celebrateEditAvatar = celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().regex(urlRegex).required(),
+    avatar: Joi.string().regex(urlRegex).uri({ scheme: ['http', 'https'] }).required(),
   }),
 });
 

@@ -11,6 +11,7 @@ const { PORT = 3000 } = process.env;
 
 const app = express();
 
+mongoose.set({ runValidators: true });
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
 app.use(bodyParser.json());
@@ -21,7 +22,7 @@ app.use(auth);
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
-app.use('*', (req, res, next) => next(new NotFoundError('Страница не найдена')));
+app.use((req, res, next) => next(new NotFoundError('Страница не найдена')));
 app.use(errors);
 app.use((err, req, res, next) => {
   res.status(err.statusCode).send({ message: err.message });
