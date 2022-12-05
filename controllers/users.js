@@ -18,15 +18,33 @@ module.exports.login = (req, res, next) => {
       );
       res.send({ token });
     })
-    .catch(() => {
-      next(new UnauthorizedError('Неверные почта или пароль'));
+    .catch((err) => {
+      if (err.name !== 'UnauthorizedError') {
+        next(new ServerError(err.message));
+      } else {
+        next(err);
+      }
     });
 };
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch((err) => next(err));
+    .catch((err) => next(new ServerError(err.message)));
+};
+
+module.exports.getCurrentUser = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (user) {
+        res.send({ data: user });
+      } else {
+        next(new NotFoundError('Пользователь не обнаружен'));
+      }
+    })
+    .catch((err) => {
+      next(new ServerError(err.message));
+    });
 };
 
 module.exports.getUserById = (req, res, next) => {
@@ -35,14 +53,14 @@ module.exports.getUserById = (req, res, next) => {
       if (user) {
         res.send({ data: user });
       } else {
-        throw new NotFoundError('Пользователь не обнаружен');
+        next(new NotFoundError('Пользователь не обнаружен'));
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next('Переданы неверные данные');
+        next(new BadRequestError('Переданы неверные данные'));
       } else {
-        next(err);
+        next(new ServerError(err.message));
       }
     });
 };
@@ -82,12 +100,12 @@ module.exports.createUser = (req, res, next) => {
 module.exports.updateUser = (req, res, next) => {
   const { name, about } = req.body;
   const userId = req.user._id;
-  User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(userId, { name, about }, { new: true })
     .then((user) => {
       if (user) {
         res.send({ data: user });
       } else {
-        throw new NotFoundError('Пользователь не обнаружен');
+        next(new NotFoundError('Пользователь не обнаружен'));
       }
     })
     .catch((err) => {
