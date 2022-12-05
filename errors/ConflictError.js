@@ -3,7 +3,9 @@ const HTTPError = require('./HTTPError');
 
 class ConflictError extends HTTPError {
   constructor(message) {
-    super(message, constants.HTTP_STATUS_CONFLICT);
+    super(message);
+    this.name = 'ConflictError';
+    this.statusCode = constants.HTTP_STATUS_CONFLICT;
   }
 }
 

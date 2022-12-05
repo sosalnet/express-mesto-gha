@@ -3,7 +3,9 @@ const HTTPError = require('./HTTPError');
 
 class NotFoundError extends HTTPError {
   constructor(message) {
-    super(message, constants.HTTP_STATUS_NOT_FOUND);
+    super(message);
+    this.name = 'NotFoundError';
+    this.statusCode = constants.HTTP_STATUS_NOT_FOUND;
   }
 }
 

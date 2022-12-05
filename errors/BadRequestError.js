@@ -3,7 +3,9 @@ const HTTPError = require('./HTTPError');
 
 class BadRequestError extends HTTPError {
   constructor(message) {
-    super(message, constants.HTTP_STATUS_BAD_REQUEST);
+    super(message);
+    this.name = 'BadRequestError';
+    this.statusCode = constants.HTTP_STATUS_BAD_REQUEST;
   }
 }
 

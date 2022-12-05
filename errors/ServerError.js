@@ -3,7 +3,9 @@ const HTTPError = require('./HTTPError');
 
 class ServerError extends HTTPError {
   constructor(message = '') {
-    super(message, constants.HTTP_STATUS_SERVICE_UNAVAILABLE);
+    super(message);
+    this.name = 'ServerError';
+    this.statusCode = constants.HTTP_STATUS_INTERNAL_SERVER_ERROR;
   }
 }
 
