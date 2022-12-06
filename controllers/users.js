@@ -5,6 +5,7 @@ const ServerError = require('../errors/ServerError');
 const BadRequestError = require('../errors/BadRequestError');
 const NotFoundError = require('../errors/NotFoundError');
 const ConflictError = require('../errors/ConflictError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
 module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
@@ -17,12 +18,8 @@ module.exports.login = (req, res, next) => {
       );
       res.send({ token });
     })
-    .catch((err) => {
-      if (err.name !== 'UnauthorizedError') {
-        next(new ServerError(err.message));
-      } else {
-        next(err);
-      }
+    .catch(() => {
+      next(new UnauthorizedError('Неправильные почта или пароль'));
     });
 };
 
