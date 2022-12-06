@@ -23,7 +23,7 @@ app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
 app.use((req, res, next) => next(new NotFoundError('Страница не найдена')));
-app.use(errors);
+app.use(errors());
 app.use((err, req, res, next) => {
   res.status(err.statusCode).send({ message: err.message });
   next();
