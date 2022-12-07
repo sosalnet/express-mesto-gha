@@ -12,7 +12,7 @@ module.exports = (req, res, next) => {
   const token = authorization.replace('Bearer ', '');
   let payload;
   try {
-    payload = jwt.verify(token, 'super-stong-key');
+    payload = jwt.verify(token, 'super-strong-key');
   } catch (err) {
     return next(new UnauthorizedError('Авторизация необходима'));
   }
