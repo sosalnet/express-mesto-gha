@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const emailRegex = require('../utils/utils');
-const urlRegex = require('../utils/utils');
+const { emailRegex } = require('../utils/utils');
+const { urlRegex } = require('../utils/utils');
 const UnauthorizedError = require('../errors/UnauthorizedError');
 
 const userSchema = new mongoose.Schema({
@@ -61,4 +61,6 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(email,
     });
 };
 
-module.exports = mongoose.model('user', userSchema);
+module.exports = {
+  User: mongoose.model('user', userSchema),
+};
